@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ระบบจองห้องประชุม SW</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Firebase SDK (Version 8 Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <!-- FullCalendar สำหรับระบบปฏิทิน -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #f3f4f6; -webkit-tap-highlight-color: transparent; }
+        .bg-sidebar { background-color: #1e2738; }
+        .text-sidebar { color: #8b9bb4; }
+        .text-sidebar:hover, .sidebar-active { color: #ffffff; background-color: #2a364c; border-left: 4px solid #3b82f6; }
+        .login-bg { background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        input, select, textarea { font-size: 16px !important; }
+
+        .fc { font-family: 'Kanit', sans-serif !important; }
+        .fc-event { cursor: pointer; border-radius: 4px; border: none; padding: 3px 5px; font-size: 0.85rem; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .fc-daygrid-event {
+            white-space: normal !important;
+            align-items: normal !important;
+            word-wrap: break-word;
+        }
+        .fc-event-main {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        .fc-toolbar-title { font-size: 1.25rem !important; font-weight: 600 !important; color: #1f2937; }
+        
+        @media (max-width: 768px) {
+            .fc-toolbar { flex-direction: column; gap: 10px; }
+            .fc-toolbar-title { font-size: 1.1rem !important; }
+            .fc-header-toolbar { margin-bottom: 0.5em !important; }
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden text-gray-800 flex relative">
+
+    <!-- ================= LOGIN SECTION ================= -->
+    <div id="loginSection" class="fixed inset-0 login-bg flex items-center justify-center z-50 px-4">
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md relative animate-fade-in">
+            <div class="text-center mb-8 mt-4">
+                <div class="bg-blue-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-bolt text-blue-600 text-4xl"></i>
+                </div>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">ระบบจองห้องประชุม SW</h1>
+                <p class="text-gray-500 text-sm mt-2">กรุณาเข้าสู่ระบบด้วย Email ของคุณ</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">อีเมลผู้ใช้งาน (Email)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-envelope text-gray-400"></i></div>
+                        <input type="email" id="loginUsername" placeholder="example@domain.com" required class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-base bg-gray-50 focus:bg-white">
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน (PIN 6 หลัก)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-lock text-gray-400"></i></div>
+                        <input type="password" id="loginPassword" inputmode="numeric" maxlength="6" placeholder="••••••" required class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-base bg-gray-50 focus:bg-white">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl shadow-lg shadow-blue-500/30 transition duration-200 flex items-center justify-center text-lg">
+                    เข้าสู่ระบบ <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MAIN APP SECTION ================= -->
+    <div id="appSection" class="w-full h-full hidden">
+        <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-30 hidden md:hidden transition-opacity backdrop-blur-sm"></div>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-72 bg-sidebar flex flex-col justify-between h-full shadow-2xl fixed md:relative z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div>
+                <div class="p-6 border-b border-gray-700/50 relative">
+                    <button onclick="toggleSidebar()" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white p-2">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                    <div class="flex items-center space-x-3 text-white mb-4">
+                        <div class="bg-blue-500/20 p-2 rounded-lg"><i class="fas fa-bolt text-blue-400 text-xl"></i></div>
+                        <span class="text-xl font-bold tracking-wider">RoomSW</span>
+                    </div>
+                    <div class="bg-gray-800/50 p-4 rounded-xl mt-4 border border-gray-700/50 overflow-hidden">
+                        <p class="text-xs text-gray-400 mb-1">ผู้ใช้งานปัจจุบัน</p>
+                        <h3 id="displayUserName" class="text-white font-semibold truncate text-base">ผู้ใช้งาน</h3>
+                        <p id="displayUserEmail" class="text-gray-400 text-[10px] truncate mb-2">email@example.com</p>
+                        <span id="displayUserRole" class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-md inline-block font-medium">User</span>
+                    </div>
+                </div>
+
+                <nav class="mt-6 flex flex-col space-y-2 px-4 no-scrollbar overflow-y-auto pb-20 md:pb-0">
+                    <a href="#" onclick="switchMenu('book')" class="menu-item book-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
+                        <i class="fas fa-calendar-plus w-6 text-lg"></i> จองห้องประชุม
+                    </a>
+                    <a href="#" onclick="switchMenu('my-bookings')" class="menu-item my-bookings-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
+                        <i class="fas fa-clipboard-list w-6 text-lg"></i> ประวัติการจองของฉัน
+                    </a>
+                    <a href="#" onclick="switchMenu('calendar')" class="menu-item calendar-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
+                        <i class="fas fa-calendar-alt w-6 text-lg"></i> ปฏิทินการใช้ห้อง
+                    </a>
+                    <a href="#" onclick="switchMenu('dashboard')" class="menu-item dashboard-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
+                        <i class="fas fa-chart-pie w-6 text-lg"></i> ภาพรวม (Dashboard)
+                    </a>
+
+                    <div id="adminMenuSection" class="hidden pt-4 mt-2 border-t border-gray-700/50">
+                        <p class="px-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">ส่วนของผู้ดูแลระบบ</p>
+                        <a href="#" onclick="switchMenu('manage-rooms')" class="menu-item manage-rooms-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200 mb-2">
+                            <i class="fas fa-door-open w-6 text-lg"></i> จัดการห้องประชุม
+                        </a>
+                        <button onclick="syncUsersData()" class="w-full px-4 py-3 rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 flex items-center transition-all duration-200 text-sm">
+                            <i class="fas fa-sync-alt w-6 text-lg"></i> เคลียร์และ Sync ข้อมูล User
+                        </button>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="p-4 bg-sidebar absolute md:relative bottom-0 w-full border-t border-gray-700/50 md:border-t-0">
+                <button onclick="handleLogout()" class="w-full bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 hover:border-red-500 py-3 rounded-xl transition-all duration-200 flex items-center justify-center font-medium">
+                    <i class="fas fa-sign-out-alt mr-2"></i> ออกจากระบบ
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col h-full relative overflow-hidden w-full">
+            <header class="bg-white shadow-sm px-4 md:px-8 py-4 flex items-center justify-between z-10 sticky top-0">
+                <div class="flex items-center overflow-hidden">
+                    <button onclick="toggleSidebar()" class="md:hidden mr-3 text-gray-600 hover:text-blue-600 focus:outline-none bg-gray-100 p-2 rounded-lg shrink-0">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h2 id="pageTitle" class="text-lg md:text-2xl font-bold text-gray-800 truncate">ระบบจองห้อง</h2>
+                </div>
+                <div class="text-xs text-gray-500 hidden sm:flex items-center bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                    <i class="far fa-clock mr-2 text-blue-500"></i>
+                    <span id="realtimeClock">Loading...</span>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-[#f3f4f6]">
+                <!-- View: Book Room -->
+                <div id="view-book" class="view-section hidden">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-8 max-w-4xl mx-auto relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center"><i class="fas fa-pen-square text-blue-500 mr-2 text-2xl"></i> จองห้องประชุม</h3>
+                        
+                        <form id="bookingForm" onsubmit="submitBooking(event)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">ห้องประชุม <span class="text-red-500">*</span></label>
+                                    <select id="bookRoomId" required onchange="checkConflict()" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 text-base"></select>
+                                </div>
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">หัวข้อการประชุม <span class="text-red-500">*</span></label>
+                                    <input type="text" id="bookSubject" placeholder="ระบุหัวข้อกิจกรรม" required class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 text-base">
+                                </div>
+                                <div class="w-full">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">วัน-เวลาเริ่ม <span class="text-red-500">*</span></label>
+                                    <input type="datetime-local" id="bookStart" required onchange="checkConflict()" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-base bg-gray-50">
+                                </div>
+                                <div class="w-full">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">วัน-เวลาสิ้นสุด <span class="text-red-500">*</span></label>
+                                    <input type="datetime-local" id="bookEnd" required onchange="checkConflict()" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-base bg-gray-50">
+                                </div>
+                                <div id="conflictWarning" class="col-span-1 md:col-span-2 hidden bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i> <span id="conflictWarningText"></span>
+                                </div>
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">หมายเหตุ</label>
+                                    <textarea id="bookNote" rows="2" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-base bg-gray-50"></textarea>
+                                </div>
+                            </div>
+                            <div class="flex flex-col-reverse md:flex-row justify-end pt-6 gap-3 mt-4">
+                                <button type="button" onclick="document.getElementById('bookingForm').reset(); checkConflict();" class="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-100 transition font-medium">ล้างฟอร์ม</button>
+                                <button type="submit" id="btnSubmitBooking" class="px-8 py-3 bg-blue-600 text-white rounded-xl shadow-lg hover:bg-blue-700 transition font-medium disabled:opacity-50">ยืนยันการจอง</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- View: Calendar -->
+                <div id="view-calendar" class="view-section hidden h-full">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 h-full flex flex-col">
+                        <div class="mb-4 flex flex-col md:flex-row gap-3">
+                            <select id="filterRoom" onchange="updateCalendarEvents()" class="px-4 py-2 border border-gray-300 rounded-lg outline-none w-full md:w-64 bg-gray-50"></select>
+                        </div>
+                        <div id="calendar" class="flex-1"></div>
+                    </div>
+                </div>
+
+                <!-- View: My Bookings -->
+                <div id="view-my-bookings" class="view-section hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="px-4 py-3">หัวข้อ</th>
+                                        <th class="px-4 py-3">วัน-เวลา</th>
+                                        <th class="px-4 py-3">ห้อง</th>
+                                        <th class="px-4 py-3 text-center">ยกเลิก</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="myBookingsTable" class="divide-y"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Dashboard -->
+                <div id="view-dashboard" class="view-section hidden">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-white p-5 rounded-xl border-l-4 border-blue-500 shadow-sm">
+                            <p class="text-xs text-gray-500">ห้องทั้งหมด</p>
+                            <h3 class="text-2xl font-bold" id="statTotalRooms">0</h3>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border-l-4 border-orange-500 shadow-sm">
+                            <p class="text-xs text-gray-500">ใช้งานวันนี้</p>
+                            <h3 class="text-2xl font-bold" id="statToday">0</h3>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border-l-4 border-green-500 shadow-sm">
+                            <p class="text-xs text-gray-500">จองพรุ่งนี้</p>
+                            <h3 class="text-2xl font-bold" id="statTomorrow">0</h3>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border-l-4 border-purple-500 shadow-sm">
+                            <p class="text-xs text-gray-500">รายการของฉัน</p>
+                            <h3 class="text-2xl font-bold" id="statMyTotal">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border">
+                        <div class="p-4 border-b font-bold">ตารางใช้งานวันนี้</div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <tbody id="todayBookingsTable" class="divide-y"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Manage Rooms -->
+                <div id="view-manage-rooms" class="view-section hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border">
+                            <h3 class="font-bold mb-4">เพิ่ม/แก้ไขห้อง</h3>
+                            <form id="roomForm" onsubmit="saveRoom(event)" class="space-y-4">
+                                <input type="hidden" id="editRoomId">
+                                <input type="text" id="roomName" placeholder="ชื่อห้อง" required class="w-full px-4 py-2 border rounded-lg bg-gray-50">
+                                <input type="number" id="roomCapacity" placeholder="ความจุ (คน)" required class="w-full px-4 py-2 border rounded-lg bg-gray-50">
+                                <textarea id="roomFacilities" placeholder="สิ่งอำนวยความสะดวก" class="w-full px-4 py-2 border rounded-lg bg-gray-50"></textarea>
+                                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">บันทึก</button>
+                                <button type="button" onclick="resetRoomForm()" id="btnCancelEditRoom" class="w-full bg-gray-100 py-2 rounded-lg hidden">ยกเลิก</button>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border p-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="roomsListContainer"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxAhwqGB3mmvoXN-UWqcUopgB2huPOtcxs0J7wz6sFfzI1ryVP-Z_FcV6Qi_67DvqlZ/exec";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9w0sQ1Vj23o-JNZYfqu4RJknUjzdPKCw",
+            authDomain: "bookingroomsw.firebaseapp.com",
+            projectId: "bookingroomsw",
+            storageBucket: "bookingroomsw.firebasestorage.app",
+            messagingSenderId: "308858290133",
+            appId: "1:308858290133:web:2b6d867f3422ccf411c75c"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let allRooms = {};
+        let allBookings = {};
+        let fullCalendarObj = null;
+
+        window.onload = () => {
+            setInterval(updateClock, 1000);
+            const storedUser = localStorage.getItem('swRoomUser');
+            if (storedUser) {
+                currentUser = JSON.parse(storedUser);
+                showApp();
+            }
+        };
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('realtimeClock').innerText = now.toLocaleTimeString('th-TH');
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('sidebarOverlay').classList.toggle('hidden');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginUsername').value.trim().toLowerCase();
+            const pin = document.getElementById('loginPassword').value.trim();
+
+            Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const userDoc = await db.collection('users').doc(email).get();
+                if (userDoc.exists && userDoc.data().password === pin) {
+                    currentUser = { username: email, ...userDoc.data() };
+                    localStorage.setItem('swRoomUser', JSON.stringify(currentUser));
+                    Swal.close();
+                    showApp();
+                } else {
+                    Swal.fire('ผิดพลาด', 'Email หรือ PIN ไม่ถูกต้อง', 'error');
+                }
+            } catch (error) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('swRoomUser');
+            location.reload();
+        }
+
+        function showApp() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('appSection').classList.remove('hidden');
+            document.getElementById('appSection').classList.add('flex');
+            
+            document.getElementById('displayUserName').innerText = currentUser.name;
+            document.getElementById('displayUserEmail').innerText = currentUser.username;
+            document.getElementById('displayUserRole').innerText = currentUser.role === 'superadmin' ? 'ADMIN' : 'USER';
+
+            if (currentUser.role === 'superadmin') document.getElementById('adminMenuSection').classList.remove('hidden');
+
+            loadData();
+            switchMenu('book');
+        }
+
+        function loadData() {
+            db.collection('rooms').onSnapshot(snap => {
+                allRooms = {};
+                snap.forEach(doc => allRooms[doc.id] = doc.data());
+                populateDropdowns();
+                renderRooms();
+            });
+
+            db.collection('bookings').onSnapshot(snap => {
+                allBookings = {};
+                snap.forEach(doc => allBookings[doc.id] = doc.data());
+                renderDashboard();
+                renderMyBookings();
+                if(fullCalendarObj) updateCalendarEvents();
+            });
+        }
+
+        function switchMenu(menuId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('sidebar-active', 'text-white'));
+            
+            document.getElementById('view-' + menuId).classList.remove('hidden');
+            const activeMenu = document.querySelector('.' + menuId + '-menu');
+            if(activeMenu) activeMenu.classList.add('sidebar-active', 'text-white');
+
+            const titles = { 'dashboard': 'Dashboard', 'book': 'จองห้อง', 'my-bookings': 'ประวัติของฉัน', 'calendar': 'ปฏิทิน', 'manage-rooms': 'ตั้งค่าห้อง' };
+            document.getElementById('pageTitle').innerText = titles[menuId];
+            
+            if(menuId === 'calendar' && !fullCalendarObj) initCalendar();
+            if(window.innerWidth < 768) toggleSidebar();
+        }
+
+        function populateDropdowns() {
+            let options = '<option value="">-- เลือกห้อง --</option>';
+            let filter = '<option value="all">ทุกห้อง</option>';
+            for (let id in allRooms) {
+                options += `<option value="${id}">${allRooms[id].name}</option>`;
+                filter += `<option value="${id}">${allRooms[id].name}</option>`;
+            }
+            document.getElementById('bookRoomId').innerHTML = options;
+            document.getElementById('filterRoom').innerHTML = filter;
+        }
+
+        function checkConflict() {
+            const roomId = document.getElementById('bookRoomId').value;
+            const start = document.getElementById('bookStart').value;
+            const end = document.getElementById('bookEnd').value;
+            const warning = document.getElementById('conflictWarning');
+            const btn = document.getElementById('btnSubmitBooking');
+
+            if(!roomId || !start || !end) {
+                warning.classList.add('hidden');
+                btn.disabled = false;
+                return;
+            }
+
+            const nS = new Date(start).getTime();
+            const nE = new Date(end).getTime();
+
+            if(nS >= nE) {
+                document.getElementById('conflictWarningText').innerText = "เวลาเริ่มต้องก่อนเวลาสิ้นสุด";
+                warning.classList.remove('hidden');
+                btn.disabled = true;
+                return;
+            }
+
+            let conflict = Object.values(allBookings).find(b => {
+                if(b.roomId !== roomId) return false;
+                const bS = new Date(b.start).getTime();
+                const bE = new Date(b.end).getTime();
+                return (nS < bE && nE > bS);
+            });
+
+            if(conflict) {
+                document.getElementById('conflictWarningText').innerText = `ห้องนี้ไม่ว่างในช่วงเวลาดังกล่าว (โดยคุณ ${conflict.name})`;
+                warning.classList.remove('hidden');
+                btn.disabled = true;
+            } else {
+                warning.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+
+        async function submitBooking(e) {
+            e.preventDefault();
+            const data = {
+                roomId: document.getElementById('bookRoomId').value,
+                subject: document.getElementById('bookSubject').value,
+                start: document.getElementById('bookStart').value,
+                end: document.getElementById('bookEnd').value,
+                note: document.getElementById('bookNote').value,
+                username: currentUser.username,
+                name: currentUser.name,
+                department: currentUser.department,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            await db.collection('bookings').add(data);
+            
+            // --- เพิ่มระบบแจ้งเตือน Telegram (ส่งผ่าน GS Web App) ---
+            const roomObj = allRooms[data.roomId];
+            fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "sendTelegram",
+                    bookingData: {
+                        room: roomObj ? roomObj.name : 'ไม่ระบุ',
+                        title: data.subject,
+                        start: data.start,
+                        end: data.end,
+                        name: data.name,
+                        department: data.department,
+                        actionBy: currentUser.name
+                    },
+                    actionText: "จองห้องประชุมใหม่"
+                })
+            }).catch(e => console.error("Telegram notification failed", e));
+
+            Swal.fire('สำเร็จ', 'จองห้องเรียบร้อย', 'success');
+            document.getElementById('bookingForm').reset();
+            switchMenu('my-bookings');
+        }
+
+        function renderMyBookings() {
+            let html = '';
+            // --- เพิ่มเงื่อนไข superadmin ให้เห็นรายการทั้งหมดและกดลบได้ ---
+            const my = Object.keys(allBookings)
+                .map(id => ({id, ...allBookings[id]}))
+                .filter(b => b.username === currentUser.username || currentUser.role === 'superadmin')
+                .sort((a,b) => new Date(b.start) - new Date(a.start));
+
+            my.forEach(b => {
+                // ถ้าเป็นแอดมินดูรายการคนอื่น ให้แสดงชื่อเจ้าของคิวด้วย
+                const showOwner = (currentUser.role === 'superadmin' && b.username !== currentUser.username) 
+                                ? ` <span class="text-xs text-blue-500">(${b.name})</span>` : '';
+
+                html += `<tr>
+                    <td class="p-4 font-bold">${b.subject}${showOwner}</td>
+                    <td class="p-4 text-xs">${formatDT(b.start)}</td>
+                    <td class="p-4">${allRooms[b.roomId]?.name || '-'}</td>
+                    <td class="p-4 text-center"><button onclick="delBook('${b.id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded-lg transition"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+            });
+            document.getElementById('myBookingsTable').innerHTML = html || '<tr><td colspan="4" class="p-10 text-center text-gray-500">ไม่มีรายการ</td></tr>';
+        }
+
+        async function delBook(id) {
+            const res = await Swal.fire({ title: 'ยืนยันการยกเลิก?', text: 'คุณต้องการยกเลิกการจองนี้ใช่หรือไม่', icon: 'warning', showCancelButton: true });
+            if(res.isConfirmed) {
+                const b = allBookings[id];
+                await db.collection('bookings').doc(id).delete();
+                
+                // --- เพิ่มระบบแจ้งเตือน Telegram เมือยกเลิก (ส่งผ่าน GS Web App) ---
+                if (b) {
+                    const roomObj = allRooms[b.roomId];
+                    fetch(GAS_WEB_APP_URL, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            action: "sendTelegram",
+                            bookingData: {
+                                room: roomObj ? roomObj.name : 'ไม่ระบุ',
+                                title: b.subject,
+                                start: b.start,
+                                end: b.end,
+                                name: b.name,
+                                department: b.department,
+                                actionBy: currentUser.name
+                            },
+                            actionText: "ยกเลิกการจอง"
+                        })
+                    }).catch(e => console.error("Telegram notification failed", e));
+                }
+                
+                Swal.fire('สำเร็จ', 'ยกเลิกการจองเรียบร้อย', 'success');
+            }
+        }
+
+        function initCalendar() {
+            fullCalendarObj = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                initialView: window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth',
+                locale: 'th',
+                height: 'auto',
+                events: getCalEvents(),
+                
+                // --- เพิ่ม Popup กดดูรายละเอียดที่หน้าปฏิทิน ---
+                eventClick: function(info) {
+                    const b = info.event.extendedProps.bookingData;
+                    const isOwner = b.username === currentUser.username;
+                    const isSuperAdmin = currentUser.role === 'superadmin';
+                    
+                    // ปุ่มลบจะขึ้นเฉพาะถ้าเป็นเจ้าของ หรือ เป็น superadmin
+                    let actionHtml = '';
+                    if (isOwner || isSuperAdmin) {
+                        actionHtml = `
+                            <div class="mt-5 flex justify-center border-t border-gray-100 pt-4">
+                                <button onclick="Swal.close(); delBook('${b.id}');" class="bg-red-50 text-red-600 hover:bg-red-500 hover:text-white px-5 py-2 rounded-xl transition-all shadow-sm text-sm font-medium flex items-center">
+                                    <i class="fas fa-trash-alt mr-2"></i> ยกเลิกการจองนี้
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    Swal.fire({
+                        title: '<span class="text-xl font-bold text-gray-800">รายละเอียดการจอง</span>',
+                        html: `
+                            <div class="text-left text-sm bg-gray-50/80 p-5 rounded-2xl border border-gray-100 mt-2 space-y-3">
+                                <div class="flex items-start"><i class="fas fa-bookmark w-6 text-blue-500 mt-1"></i> <div><b>หัวข้อ:</b><br>${b.subject}</div></div>
+                                <div class="flex items-start"><i class="fas fa-door-open w-6 text-indigo-500 mt-1"></i> <div><b>ห้อง:</b><br>${allRooms[b.roomId]?.name || '-'}</div></div>
+                                <div class="flex items-start"><i class="fas fa-user-circle w-6 text-gray-500 mt-1"></i> <div><b>ผู้จอง:</b><br>${b.name} (${b.department})</div></div>
+                                <div class="flex items-start"><i class="fas fa-play-circle w-6 text-green-500 mt-1"></i> <div><b>เริ่ม:</b><br>${formatDT(b.start)}</div></div>
+                                <div class="flex items-start"><i class="fas fa-stop-circle w-6 text-red-500 mt-1"></i> <div><b>สิ้นสุด:</b><br>${formatDT(b.end)}</div></div>
+                                ${b.note ? `<div class="flex items-start"><i class="fas fa-comment-alt w-6 text-orange-400 mt-1"></i> <div><b>หมายเหตุ:</b><br>${b.note}</div></div>` : ''}
+                            </div>
+                            ${actionHtml}
+                        `,
+                        showConfirmButton: false,
+                        showCloseButton: true,
+                        customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-100' }
+                    });
+                }
+            });
+            fullCalendarObj.render();
+        }
+
+        function getCalEvents() {
+            const filter = document.getElementById('filterRoom').value;
+            // --- แนบข้อมูล extendedProps เพื่อใช้แสดงใน Popup ---
+            return Object.keys(allBookings)
+                .map(id => ({id, ...allBookings[id]}))
+                .filter(b => filter === 'all' || b.roomId === filter)
+                .map(b => ({
+                    title: `${allRooms[b.roomId]?.name}: ${b.subject}`,
+                    start: b.start,
+                    end: b.end,
+                    color: b.username === currentUser.username ? '#3b82f6' : '#94a3b8',
+                    extendedProps: { bookingData: b }
+                }));
+        }
+
+        function updateCalendarEvents() {
+            fullCalendarObj.removeAllEvents();
+            fullCalendarObj.addEventSource(getCalEvents());
+        }
+
+        function renderDashboard() {
+            const today = new Date().toISOString().split('T')[0];
+            const bookings = Object.values(allBookings);
+            
+            document.getElementById('statTotalRooms').innerText = Object.keys(allRooms).length;
+            document.getElementById('statToday').innerText = bookings.filter(b => b.start.includes(today)).length;
+            document.getElementById('statMyTotal').innerText = bookings.filter(b => b.username === currentUser.username).length;
+
+            let html = '';
+            bookings.filter(b => b.start.includes(today)).forEach(b => {
+                html += `<tr><td class="p-3"><b>${b.name}</b><br>${b.subject}</td><td class="p-3">${allRooms[b.roomId]?.name}</td></tr>`;
+            });
+            document.getElementById('todayBookingsTable').innerHTML = html || '<tr><td class="p-5 text-center text-gray-500">วันนี้ไม่มีคิวใช้งาน</td></tr>';
+        }
+
+        function renderRooms() {
+            let html = '';
+            for(let id in allRooms) {
+                html += `<div class="p-4 border border-gray-100 rounded-2xl bg-white shadow-sm flex justify-between items-center transition hover:shadow-md">
+                    <div><b class="text-gray-800 text-base">${allRooms[id].name}</b><br><span class="text-xs text-gray-500"><i class="fas fa-users mr-1"></i> จุ ${allRooms[id].capacity} คน</span></div>
+                    <div class="space-x-1">
+                        <button onclick="editRoom('${id}')" class="text-blue-500 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition"><i class="fas fa-edit"></i></button>
+                        <button onclick="delRoom('${id}')" class="text-red-500 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('roomsListContainer').innerHTML = html;
+        }
+
+        async function saveRoom(e) {
+            e.preventDefault();
+            const id = document.getElementById('editRoomId').value;
+            const data = {
+                name: document.getElementById('roomName').value,
+                capacity: document.getElementById('roomCapacity').value,
+                facilities: document.getElementById('roomFacilities').value
+            };
+            if(id) await db.collection('rooms').doc(id).update(data);
+            else await db.collection('rooms').add(data);
+            resetRoomForm();
+        }
+
+        function editRoom(id) {
+            const r = allRooms[id];
+            document.getElementById('editRoomId').value = id;
+            document.getElementById('roomName').value = r.name;
+            document.getElementById('roomCapacity').value = r.capacity;
+            document.getElementById('roomFacilities').value = r.facilities;
+            document.getElementById('btnCancelEditRoom').classList.remove('hidden');
+        }
+
+        function resetRoomForm() {
+            document.getElementById('roomForm').reset();
+            document.getElementById('editRoomId').value = '';
+            document.getElementById('btnCancelEditRoom').classList.add('hidden');
+        }
+
+        async function delRoom(id) {
+            const res = await Swal.fire({ title: 'ลบห้อง?', showCancelButton: true });
+            if(res.isConfirmed) await db.collection('rooms').doc(id).delete();
+        }
+
+        function syncUsersData() {
+            Swal.fire({
+                title: 'ยืนยันการ Sync?',
+                text: "ระบบจะลบข้อมูล User ในระบบเดิมออกทั้งหมด และอัปเดตใหม่ตาม Google Sheet ล่าสุด",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                confirmButtonText: 'ตกลง, Sync เลย',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'กำลัง Sync ข้อมูล...',
+                        html: 'ระบบกำลังลบข้อมูลเก่าและเขียนข้อมูลใหม่',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    fetch(GAS_WEB_APP_URL, {
+                        method: "POST",
+                        body: JSON.stringify({ action: "syncUsers" })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            Swal.fire('สำเร็จ', 'Sync ข้อมูล User เรียบร้อยแล้ว', 'success');
+                        } else {
+                            Swal.fire('ผิดพลาด', 'ไม่สามารถ Sync ได้: ' + data.message, 'error');
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อระบบ Sync ได้: ' + err, 'error');
+                    });
+                }
+            });
+        }
+
+        function formatDT(str) {
+            const d = new Date(str);
+            return d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+        }
+    </script>
+</body>
+</html>
