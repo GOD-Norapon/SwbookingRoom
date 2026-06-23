@@ -91,51 +91,49 @@
         <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-30 hidden md:hidden transition-opacity backdrop-blur-sm"></div>
 
         <!-- Sidebar -->
-        <div id="sidebar" class="w-72 bg-sidebar flex flex-col justify-between h-full shadow-2xl fixed md:relative z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
-            <div>
-                <div class="p-6 border-b border-gray-700/50 relative">
-                    <button onclick="toggleSidebar()" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white p-2">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                    <div class="flex items-center space-x-3 text-white mb-4">
-                        <div class="bg-blue-500/20 p-2 rounded-lg"><i class="fas fa-bolt text-blue-400 text-xl"></i></div>
-                        <span class="text-xl font-bold tracking-wider">RoomSW</span>
-                    </div>
-                    <div class="bg-gray-800/50 p-4 rounded-xl mt-4 border border-gray-700/50 overflow-hidden">
-                        <p class="text-xs text-gray-400 mb-1">ผู้ใช้งานปัจจุบัน</p>
-                        <h3 id="displayUserName" class="text-white font-semibold truncate text-base">ผู้ใช้งาน</h3>
-                        <p id="displayUserEmail" class="text-gray-400 text-[10px] truncate mb-2">email@example.com</p>
-                        <span id="displayUserRole" class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-md inline-block font-medium">User</span>
-                    </div>
+        <div id="sidebar" class="w-72 bg-sidebar flex flex-col h-full shadow-2xl fixed md:relative z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div class="p-6 border-b border-gray-700/50 relative shrink-0">
+                <button onclick="toggleSidebar()" class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white p-2">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <div class="flex items-center space-x-3 text-white mb-4">
+                    <div class="bg-blue-500/20 p-2 rounded-lg"><i class="fas fa-bolt text-blue-400 text-xl"></i></div>
+                    <span class="text-xl font-bold tracking-wider">RoomSW</span>
                 </div>
-
-                <nav class="mt-6 flex flex-col space-y-2 px-4 no-scrollbar overflow-y-auto pb-20 md:pb-0">
-                    <a href="#" onclick="switchMenu('book')" class="menu-item book-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
-                        <i class="fas fa-calendar-plus w-6 text-lg"></i> จองห้องประชุม
-                    </a>
-                    <a href="#" onclick="switchMenu('my-bookings')" class="menu-item my-bookings-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
-                        <i class="fas fa-clipboard-list w-6 text-lg"></i> ประวัติการจองของฉัน
-                    </a>
-                    <a href="#" onclick="switchMenu('calendar')" class="menu-item calendar-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
-                        <i class="fas fa-calendar-alt w-6 text-lg"></i> ปฏิทินการใช้ห้อง
-                    </a>
-                    <a href="#" onclick="switchMenu('dashboard')" class="menu-item dashboard-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
-                        <i class="fas fa-chart-pie w-6 text-lg"></i> ภาพรวม (Dashboard)
-                    </a>
-
-                    <div id="adminMenuSection" class="hidden pt-4 mt-2 border-t border-gray-700/50">
-                        <p class="px-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">ส่วนของผู้ดูแลระบบ</p>
-                        <a href="#" onclick="switchMenu('manage-rooms')" class="menu-item manage-rooms-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200 mb-2">
-                            <i class="fas fa-door-open w-6 text-lg"></i> จัดการห้องประชุม
-                        </a>
-                        <button onclick="syncUsersData()" class="w-full px-4 py-3 rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 flex items-center transition-all duration-200 text-sm">
-                            <i class="fas fa-sync-alt w-6 text-lg"></i> เคลียร์และ Sync ข้อมูล User
-                        </button>
-                    </div>
-                </nav>
+                <div class="bg-gray-800/50 p-4 rounded-xl mt-4 border border-gray-700/50 overflow-hidden">
+                    <p class="text-xs text-gray-400 mb-1">ผู้ใช้งานปัจจุบัน</p>
+                    <h3 id="displayUserName" class="text-white font-semibold truncate text-base">ผู้ใช้งาน</h3>
+                    <p id="displayUserEmail" class="text-gray-400 text-[10px] truncate mb-2">email@example.com</p>
+                    <span id="displayUserRole" class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-md inline-block font-medium">User</span>
+                </div>
             </div>
 
-            <div class="p-4 bg-sidebar absolute md:relative bottom-0 w-full border-t border-gray-700/50 md:border-t-0">
+            <nav class="flex-1 mt-4 flex flex-col space-y-2 px-4 no-scrollbar overflow-y-auto pb-4">
+                <a href="#" onclick="switchMenu('book')" class="menu-item book-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
+                    <i class="fas fa-calendar-plus w-6 text-lg"></i> จองห้องประชุม
+                </a>
+                <a href="#" onclick="switchMenu('my-bookings')" class="menu-item my-bookings-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
+                    <i class="fas fa-clipboard-list w-6 text-lg"></i> ประวัติการจองของฉัน
+                </a>
+                <a href="#" onclick="switchMenu('calendar')" class="menu-item calendar-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
+                    <i class="fas fa-calendar-alt w-6 text-lg"></i> ปฏิทินการใช้ห้อง
+                </a>
+                <a href="#" onclick="switchMenu('dashboard')" class="menu-item dashboard-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200">
+                    <i class="fas fa-chart-pie w-6 text-lg"></i> ภาพรวม (Dashboard)
+                </a>
+
+                <div id="adminMenuSection" class="hidden pt-4 mt-2 border-t border-gray-700/50">
+                    <p class="px-2 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">ส่วนของผู้ดูแลระบบ</p>
+                    <a href="#" onclick="switchMenu('manage-rooms')" class="menu-item manage-rooms-menu px-4 py-3 rounded-lg text-sidebar flex items-center transition-all duration-200 mb-2">
+                        <i class="fas fa-door-open w-6 text-lg"></i> จัดการห้องประชุม
+                    </a>
+                    <button onclick="syncUsersData()" class="w-full px-4 py-3 rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 flex items-center transition-all duration-200 text-sm">
+                        <i class="fas fa-sync-alt w-6 text-lg"></i> เคลียร์และ Sync ข้อมูล User
+                    </button>
+                </div>
+            </nav>
+
+            <div class="p-4 bg-sidebar shrink-0 border-t border-gray-700/50 md:border-t-0">
                 <button onclick="handleLogout()" class="w-full bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 hover:border-red-500 py-3 rounded-xl transition-all duration-200 flex items-center justify-center font-medium">
                     <i class="fas fa-sign-out-alt mr-2"></i> ออกจากระบบ
                 </button>
@@ -592,9 +590,10 @@
                 .map(id => ({id, ...allBookings[id]}))
                 .filter(b => filter === 'all' || b.roomId === filter)
                 .map(b => ({
-                    title: `${allRooms[b.roomId]?.name}: ${b.subject}`,
+                    title: `${allRooms[b.roomId]?.name || 'ไม่ระบุห้อง'}`,
                     start: b.start,
                     end: b.end,
+                    display: 'block',
                     color: b.username === currentUser.username ? '#3b82f6' : '#94a3b8',
                     extendedProps: { bookingData: b }
                 }));
