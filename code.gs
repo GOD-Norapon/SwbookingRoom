@@ -116,8 +116,6 @@ function syncUsersToFirestore() {
 function sendTelegramNotification(bookingData, actionText) {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
 
-  const startDT = new Date(bookingData.start);
-  const endDT = new Date(bookingData.end);
   const formatDate = (date) => Utilities.formatDate(date, "Asia/Bangkok", "dd/MM/yyyy HH:mm");
 
   // ตรวจสอบ Action ว่าเป็นการ จองใหม่, แก้ไข หรือ ยกเลิก
@@ -126,14 +124,28 @@ function sendTelegramNotification(bookingData, actionText) {
     emoji = "❌";
   } else if (actionText.includes("แก้ไข")) {
     emoji = "📝";
+  } else if (actionText.includes("ต่อเนื่อง")) {
+    emoji = "🔁";
   }
   
   let message = `${emoji} <b>${actionText}</b>\n\n`;
   message += `<b>📌 หัวข้อ:</b> ${bookingData.title}\n`;
   message += `<b>🚪 ห้องประชุม:</b> ${bookingData.room}\n`;
   message += `<b>👤 ผู้จอง:</b> ${bookingData.name} (${bookingData.department})\n`;
-  message += `<b>⏱ เริ่ม:</b> ${formatDate(startDT)}\n`;
-  message += `<b>🏁 สิ้นสุด:</b> ${formatDate(endDT)}\n`;
+  
+  if (bookingData.isRecurring && bookingData.recurSummary) {
+    message += `<b>🔄 รูปแบบ:</b> จองต่อเนื่องช่วงเวลาเดียวกัน\n`;
+    message += `<b>⏱ สรุป:</b> ${bookingData.recurSummary}\n`;
+  } else {
+    try {
+      const startDT = new Date(bookingData.start);
+      const endDT = new Date(bookingData.end);
+      message += `<b>⏱ เริ่ม:</b> ${formatDate(startDT)}\n`;
+      message += `<b>🏁 สิ้นสุด:</b> ${formatDate(endDT)}\n`;
+    } catch (err) {
+      message += `<b>⏱ เวลา:</b> ${bookingData.start} ถึง ${bookingData.end}\n`;
+    }
+  }
   
   // เพิ่มการแสดงหมายเหตุ (ถ้ามี)
   if (bookingData.note && bookingData.note.trim() !== "") {

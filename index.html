@@ -172,24 +172,134 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">หัวข้อการประชุม <span class="text-red-500">*</span></label>
                                     <input type="text" id="bookSubject" placeholder="ระบุหัวข้อกิจกรรม" required class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 text-base">
                                 </div>
-                                <div class="w-full">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">วัน-เวลาเริ่ม <span class="text-red-500">*</span></label>
-                                    <input type="datetime-local" id="bookStart" required onchange="checkConflict()" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-base bg-gray-50">
+
+                                <!-- ส่วนเลือกรูปแบบการจอง (วันเดียว หรือ หลายวันช่วงเวลาเดียวกัน) -->
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">รูปแบบการจอง</label>
+                                    <div class="grid grid-cols-2 gap-2 p-1.5 bg-gray-100 rounded-xl">
+                                        <button type="button" id="btnModeSingle" onclick="switchBookingMode('single')" class="py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center bg-white text-blue-600 shadow-sm">
+                                            <i class="fas fa-calendar-day mr-2"></i> จองครั้งเดียว (วันเดียว)
+                                        </button>
+                                        <button type="button" id="btnModeRecurring" onclick="switchBookingMode('recurring')" class="py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center text-gray-600 hover:text-gray-900">
+                                            <i class="fas fa-calendar-week mr-2"></i> จองหลายวัน (เวลาเดียวกันทุกวัน)
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="w-full">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">วัน-เวลาสิ้นสุด <span class="text-red-500">*</span></label>
-                                    <input type="datetime-local" id="bookEnd" required onchange="checkConflict()" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-base bg-gray-50">
+
+                                <!-- โหมด 1: จองครั้งเดียว (วันเดียว) -->
+                                <div id="sectionSingleBooking" class="contents">
+                                    <div class="w-full">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">วัน-เวลาเริ่ม <span class="text-red-500">*</span></label>
+                                        <input type="datetime-local" id="bookStart" required onchange="checkConflict()" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-base bg-gray-50">
+                                    </div>
+                                    <div class="w-full">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">วัน-เวลาสิ้นสุด <span class="text-red-500">*</span></label>
+                                        <input type="datetime-local" id="bookEnd" required onchange="checkConflict()" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-base bg-gray-50">
+                                    </div>
                                 </div>
+
+                                <!-- โหมด 2: จองหลายวัน (ช่วงเวลาเดียวกันทุกวัน เช่น 10-20 ต.ค. เวลา 12:00-13:00) -->
+                                <div id="sectionRecurringBooking" class="col-span-1 md:col-span-2 hidden bg-blue-50/60 p-4 md:p-5 rounded-2xl border border-blue-100 space-y-4">
+                                    <div class="flex items-center text-blue-800 text-sm font-semibold pb-2 border-b border-blue-200/60">
+                                        <i class="fas fa-sync-alt mr-2 text-blue-500"></i> กำหนดช่วงวันที่และเวลาเดียวกันของแต่ละวัน
+                                    </div>
+
+                                    <!-- วันที่เริ่ม - สิ้นสุด -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">ตั้งแต่วันที่ <span class="text-red-500">*</span></label>
+                                            <input type="date" id="recurStartDate" onchange="checkConflict()" class="block w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white text-base">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">ถึงวันที่ <span class="text-red-500">*</span></label>
+                                            <input type="date" id="recurEndDate" onchange="checkConflict()" class="block w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white text-base">
+                                        </div>
+                                    </div>
+
+                                    <!-- เวลาเริ่ม - สิ้นสุด (ของแต่ละวัน) -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">เวลาเริ่ม (แต่ละวัน) <span class="text-red-500">*</span></label>
+                                            <input type="time" id="recurStartTime" onchange="checkConflict()" class="block w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white text-base">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">เวลาสิ้นสุด (แต่ละวัน) <span class="text-red-500">*</span></label>
+                                            <input type="time" id="recurEndTime" onchange="checkConflict()" class="block w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white text-base">
+                                        </div>
+                                    </div>
+
+                                    <!-- เลือกวันในสัปดาห์ -->
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="block text-sm font-medium text-gray-700">วันที่ต้องการจองในแต่ละสัปดาห์</label>
+                                            <div class="space-x-1">
+                                                <button type="button" onclick="setRecurDaysPreset('workdays')" class="text-xs px-2.5 py-1 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg text-gray-700 transition">จันทร์ - ศุกร์</button>
+                                                <button type="button" onclick="setRecurDaysPreset('all')" class="text-xs px-2.5 py-1 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg text-gray-700 transition">ทุกวัน</button>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center">
+                                            <label class="cursor-pointer">
+                                                <input type="checkbox" name="recurDay" value="1" checked onchange="checkConflict()" class="hidden peer">
+                                                <div class="py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 bg-white hover:bg-gray-50 transition">จ.</div>
+                                            </label>
+                                            <label class="cursor-pointer">
+                                                <input type="checkbox" name="recurDay" value="2" checked onchange="checkConflict()" class="hidden peer">
+                                                <div class="py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 bg-white hover:bg-gray-50 transition">อ.</div>
+                                            </label>
+                                            <label class="cursor-pointer">
+                                                <input type="checkbox" name="recurDay" value="3" checked onchange="checkConflict()" class="hidden peer">
+                                                <div class="py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 bg-white hover:bg-gray-50 transition">พ.</div>
+                                            </label>
+                                            <label class="cursor-pointer">
+                                                <input type="checkbox" name="recurDay" value="4" checked onchange="checkConflict()" class="hidden peer">
+                                                <div class="py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 bg-white hover:bg-gray-50 transition">พฤ.</div>
+                                            </label>
+                                            <label class="cursor-pointer">
+                                                <input type="checkbox" name="recurDay" value="5" checked onchange="checkConflict()" class="hidden peer">
+                                                <div class="py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 bg-white hover:bg-gray-50 transition">ศ.</div>
+                                            </label>
+                                            <label class="cursor-pointer">
+                                                <input type="checkbox" name="recurDay" value="6" checked onchange="checkConflict()" class="hidden peer">
+                                                <div class="py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 bg-white hover:bg-gray-50 transition">ส.</div>
+                                            </label>
+                                            <label class="cursor-pointer">
+                                                <input type="checkbox" name="recurDay" value="0" checked onchange="checkConflict()" class="hidden peer">
+                                                <div class="py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 bg-white hover:bg-gray-50 transition">อา.</div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- สรุปจำนวนวัน -->
+                                    <div id="recurSummaryBox" class="hidden text-xs sm:text-sm bg-white p-3.5 rounded-xl border border-blue-200 text-blue-900 shadow-sm">
+                                        <div class="flex items-start">
+                                            <i class="fas fa-calendar-check text-blue-500 mr-2 mt-0.5 text-base"></i>
+                                            <div id="recurSummaryText" class="flex-1 font-medium"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ตัวเลือกข้ามวันที่ติดชน -->
+                                    <div id="skipConflictOption" class="hidden bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs sm:text-sm text-amber-900">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" id="chkSkipConflict" onchange="checkConflict()" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-2">
+                                            <span>ข้ามวันที่ห้องไม่ว่างโดยอัตโนมัติ (จองเฉพาะวันที่ห้องว่าง)</span>
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <div id="conflictWarning" class="col-span-1 md:col-span-2 hidden bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm">
-                                    <i class="fas fa-exclamation-triangle mr-2"></i> <span id="conflictWarningText"></span>
+                                    <div class="flex items-start">
+                                        <i class="fas fa-exclamation-triangle mr-2 mt-0.5 text-base text-red-500"></i>
+                                        <div id="conflictWarningText" class="flex-1"></div>
+                                    </div>
                                 </div>
+
                                 <div class="col-span-1 md:col-span-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">หมายเหตุ</label>
                                     <textarea id="bookNote" rows="2" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-base bg-gray-50"></textarea>
                                 </div>
                             </div>
                             <div class="flex flex-col-reverse md:flex-row justify-end pt-6 gap-3 mt-4">
-                                <button type="button" onclick="document.getElementById('bookingForm').reset(); checkConflict();" class="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-100 transition font-medium">ล้างฟอร์ม</button>
+                                <button type="button" onclick="resetBookingForm()" class="px-6 py-3 border border-gray-300 rounded-xl hover:bg-gray-100 transition font-medium">ล้างฟอร์ม</button>
                                 <button type="submit" id="btnSubmitBooking" class="px-8 py-3 bg-blue-600 text-white rounded-xl shadow-lg hover:bg-blue-700 transition font-medium disabled:opacity-50">ยืนยันการจอง</button>
                             </div>
                         </form>
@@ -297,6 +407,10 @@
         let allRooms = {};
         let allBookings = {};
         let fullCalendarObj = null;
+        let bookingMode = 'single'; // 'single' | 'recurring'
+        let currentCalculatedSlots = [];
+        let currentAvailableSlots = [];
+        let currentConflictedSlots = [];
 
         window.onload = () => {
             setInterval(updateClock, 1000);
@@ -402,84 +516,471 @@
             document.getElementById('filterRoom').innerHTML = filter;
         }
 
+        function switchBookingMode(mode) {
+            bookingMode = mode;
+            const singleSection = document.getElementById('sectionSingleBooking');
+            const recurringSection = document.getElementById('sectionRecurringBooking');
+            const btnSingle = document.getElementById('btnModeSingle');
+            const btnRecurring = document.getElementById('btnModeRecurring');
+            const bookStart = document.getElementById('bookStart');
+            const bookEnd = document.getElementById('bookEnd');
+            const recurStartDate = document.getElementById('recurStartDate');
+            const recurEndDate = document.getElementById('recurEndDate');
+            const recurStartTime = document.getElementById('recurStartTime');
+            const recurEndTime = document.getElementById('recurEndTime');
+
+            if (mode === 'single') {
+                singleSection.classList.remove('hidden');
+                recurringSection.classList.add('hidden');
+                
+                btnSingle.className = "py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center bg-white text-blue-600 shadow-sm";
+                btnRecurring.className = "py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center text-gray-600 hover:text-gray-900";
+
+                bookStart.required = true;
+                bookEnd.required = true;
+                recurStartDate.required = false;
+                recurEndDate.required = false;
+                recurStartTime.required = false;
+                recurEndTime.required = false;
+            } else {
+                singleSection.classList.add('hidden');
+                recurringSection.classList.remove('hidden');
+
+                btnRecurring.className = "py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center bg-white text-blue-600 shadow-sm";
+                btnSingle.className = "py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center text-gray-600 hover:text-gray-900";
+
+                bookStart.required = false;
+                bookEnd.required = false;
+                recurStartDate.required = true;
+                recurEndDate.required = true;
+                recurStartTime.required = true;
+                recurEndTime.required = true;
+            }
+            checkConflict();
+        }
+
+        function setRecurDaysPreset(preset) {
+            const checkboxes = document.querySelectorAll('input[name="recurDay"]');
+            checkboxes.forEach(cb => {
+                const val = parseInt(cb.value);
+                if (preset === 'all') {
+                    cb.checked = true;
+                } else if (preset === 'workdays') {
+                    // 1-5 = Mon-Fri, 0 = Sun, 6 = Sat
+                    cb.checked = (val >= 1 && val <= 5);
+                }
+            });
+            checkConflict();
+        }
+
+        function resetBookingForm() {
+            document.getElementById('bookingForm').reset();
+            switchBookingMode('single');
+            setRecurDaysPreset('all');
+            document.getElementById('conflictWarning').classList.add('hidden');
+            document.getElementById('recurSummaryBox').classList.add('hidden');
+            document.getElementById('skipConflictOption').classList.add('hidden');
+            document.getElementById('btnSubmitBooking').disabled = false;
+            currentCalculatedSlots = [];
+            currentAvailableSlots = [];
+            currentConflictedSlots = [];
+        }
+
+        function formatDateShort(dateStr) {
+            if (!dateStr) return '';
+            const [y, m, d] = dateStr.split('T')[0].split('-').map(Number);
+            const dt = new Date(y, m - 1, d);
+            return dt.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
         function checkConflict() {
             const roomId = document.getElementById('bookRoomId').value;
-            const start = document.getElementById('bookStart').value;
-            const end = document.getElementById('bookEnd').value;
             const warning = document.getElementById('conflictWarning');
+            const warningText = document.getElementById('conflictWarningText');
             const btn = document.getElementById('btnSubmitBooking');
+            const summaryBox = document.getElementById('recurSummaryBox');
+            const summaryText = document.getElementById('recurSummaryText');
+            const skipOption = document.getElementById('skipConflictOption');
+            const chkSkip = document.getElementById('chkSkipConflict');
 
-            if(!roomId || !start || !end) {
+            if (!roomId) {
                 warning.classList.add('hidden');
                 btn.disabled = false;
                 return;
             }
 
-            const nS = new Date(start).getTime();
-            const nE = new Date(end).getTime();
+            if (bookingMode === 'single') {
+                summaryBox.classList.add('hidden');
+                skipOption.classList.add('hidden');
 
-            if(nS >= nE) {
-                document.getElementById('conflictWarningText').innerText = "เวลาเริ่มต้องก่อนเวลาสิ้นสุด";
-                warning.classList.remove('hidden');
-                btn.disabled = true;
-                return;
-            }
+                const start = document.getElementById('bookStart').value;
+                const end = document.getElementById('bookEnd').value;
 
-            let conflict = Object.values(allBookings).find(b => {
-                if(b.roomId !== roomId) return false;
-                const bS = new Date(b.start).getTime();
-                const bE = new Date(b.end).getTime();
-                return (nS < bE && nE > bS);
-            });
+                if (!start || !end) {
+                    warning.classList.add('hidden');
+                    btn.disabled = false;
+                    return;
+                }
 
-            if(conflict) {
-                document.getElementById('conflictWarningText').innerText = `ห้องนี้ไม่ว่างในช่วงเวลาดังกล่าว (โดยคุณ ${conflict.name})`;
-                warning.classList.remove('hidden');
-                btn.disabled = true;
+                const nS = new Date(start).getTime();
+                const nE = new Date(end).getTime();
+
+                if (nS >= nE) {
+                    warningText.innerText = "เวลาเริ่มต้องก่อนเวลาสิ้นสุด";
+                    warning.className = "col-span-1 md:col-span-2 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm";
+                    warning.classList.remove('hidden');
+                    btn.disabled = true;
+                    return;
+                }
+
+                let conflict = Object.values(allBookings).find(b => {
+                    if (b.roomId !== roomId) return false;
+                    const bS = new Date(b.start).getTime();
+                    const bE = new Date(b.end).getTime();
+                    return (nS < bE && nE > bS);
+                });
+
+                if (conflict) {
+                    warningText.innerText = `ห้องนี้ไม่ว่างในช่วงเวลาดังกล่าว (โดยคุณ ${conflict.name})`;
+                    warning.className = "col-span-1 md:col-span-2 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm";
+                    warning.classList.remove('hidden');
+                    btn.disabled = true;
+                } else {
+                    warning.classList.add('hidden');
+                    btn.disabled = false;
+                }
             } else {
-                warning.classList.add('hidden');
-                btn.disabled = false;
+                // โหมด Recurring (หลายวัน ช่วงเวลาเดียวกัน เช่น 10-20 ต.ค. เวลา 12:00-13:00)
+                const startDateStr = document.getElementById('recurStartDate').value;
+                const endDateStr = document.getElementById('recurEndDate').value;
+                const startTime = document.getElementById('recurStartTime').value;
+                const endTime = document.getElementById('recurEndTime').value;
+                const selectedDays = Array.from(document.querySelectorAll('input[name="recurDay"]:checked')).map(el => parseInt(el.value));
+                const isSkipChecked = chkSkip ? chkSkip.checked : false;
+
+                if (!startDateStr || !endDateStr || !startTime || !endTime) {
+                    warning.classList.add('hidden');
+                    summaryBox.classList.add('hidden');
+                    skipOption.classList.add('hidden');
+                    btn.disabled = false;
+                    return;
+                }
+
+                if (startDateStr > endDateStr) {
+                    warningText.innerText = "วันที่เริ่มต้นต้องมาก่อนหรือตรงกับวันที่สิ้นสุด";
+                    warning.className = "col-span-1 md:col-span-2 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm";
+                    warning.classList.remove('hidden');
+                    summaryBox.classList.add('hidden');
+                    skipOption.classList.add('hidden');
+                    btn.disabled = true;
+                    return;
+                }
+
+                if (startTime >= endTime) {
+                    warningText.innerText = "เวลาเริ่มต้องก่อนเวลาสิ้นสุดในแต่ละวัน";
+                    warning.className = "col-span-1 md:col-span-2 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm";
+                    warning.classList.remove('hidden');
+                    summaryBox.classList.add('hidden');
+                    skipOption.classList.add('hidden');
+                    btn.disabled = true;
+                    return;
+                }
+
+                if (selectedDays.length === 0) {
+                    warningText.innerText = "กรุณาเลือกวันในสัปดาห์ที่ต้องการจองอย่างน้อย 1 วัน";
+                    warning.className = "col-span-1 md:col-span-2 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm";
+                    warning.classList.remove('hidden');
+                    summaryBox.classList.add('hidden');
+                    skipOption.classList.add('hidden');
+                    btn.disabled = true;
+                    return;
+                }
+
+                // คำนวณวันทั้งหมด
+                const slots = [];
+                const [sY, sM, sD] = startDateStr.split('-').map(Number);
+                const [eY, eM, eD] = endDateStr.split('-').map(Number);
+                let cur = new Date(sY, sM - 1, sD);
+                const endLimit = new Date(eY, eM - 1, eD);
+
+                while (cur <= endLimit) {
+                    const dow = cur.getDay();
+                    if (selectedDays.includes(dow)) {
+                        const y = cur.getFullYear();
+                        const m = String(cur.getMonth() + 1).padStart(2, '0');
+                        const d = String(cur.getDate()).padStart(2, '0');
+                        const dateStr = `${y}-${m}-${d}`;
+                        slots.push({
+                            start: `${dateStr}T${startTime}`,
+                            end: `${dateStr}T${endTime}`,
+                            dateStr: dateStr
+                        });
+                    }
+                    cur.setDate(cur.getDate() + 1);
+                }
+
+                if (slots.length === 0) {
+                    warningText.innerText = "ไม่มีวันที่ตรงกับเงื่อนไขที่เลือกในช่วงวันที่ดังกล่าว";
+                    warning.className = "col-span-1 md:col-span-2 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm";
+                    warning.classList.remove('hidden');
+                    summaryBox.classList.add('hidden');
+                    skipOption.classList.add('hidden');
+                    btn.disabled = true;
+                    return;
+                }
+
+                // ตรวจสอบ Conflict ในแต่ละ slot
+                const available = [];
+                const conflicted = [];
+
+                slots.forEach(slot => {
+                    const sTime = new Date(slot.start).getTime();
+                    const eTime = new Date(slot.end).getTime();
+
+                    const conflictItem = Object.values(allBookings).find(b => {
+                        if (b.roomId !== roomId) return false;
+                        const bS = new Date(b.start).getTime();
+                        const bE = new Date(b.end).getTime();
+                        return (sTime < bE && eTime > bS);
+                    });
+
+                    if (conflictItem) {
+                        conflicted.push({ slot, conflict: conflictItem });
+                    } else {
+                        available.push(slot);
+                    }
+                });
+
+                currentCalculatedSlots = slots;
+                currentAvailableSlots = available;
+                currentConflictedSlots = conflicted;
+
+                // แสดงสรุปผล
+                summaryBox.classList.remove('hidden');
+                const startFmt = formatDateShort(startDateStr);
+                const endFmt = formatDateShort(endDateStr);
+
+                if (conflicted.length === 0) {
+                    // ว่างทุกวัน 100%
+                    warning.classList.add('hidden');
+                    skipOption.classList.add('hidden');
+                    summaryText.innerHTML = `
+                        <div class="text-green-700 font-bold"><i class="fas fa-check-circle mr-1"></i> ห้องว่างพร้อมจองทั้งหมด ${slots.length} วัน</div>
+                        <div class="text-gray-600 text-xs mt-0.5">ช่วงวันที่ ${startFmt} ถึง ${endFmt} (เวลา ${startTime} - ${endTime} น. ของทุกวัน)</div>
+                    `;
+                    btn.disabled = false;
+                } else {
+                    // มีวันติดชน
+                    skipOption.classList.remove('hidden');
+
+                    let conflictListHtml = conflicted.slice(0, 4).map(c => 
+                        `<li><b>${formatDateShort(c.slot.dateStr)}</b> (${startTime}-${endTime} น.) - คุณ${c.conflict.name} (${c.conflict.department || 'ไม่ระบุ'})</li>`
+                    ).join('');
+
+                    if (conflicted.length > 4) {
+                        conflictListHtml += `<li>...และอีก ${conflicted.length - 4} วัน</li>`;
+                    }
+
+                    if (isSkipChecked) {
+                        // ผู้ใช้เลือกข้ามวันที่ติดชน
+                        if (available.length > 0) {
+                            warning.className = "col-span-1 md:col-span-2 bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-sm";
+                            warningText.innerHTML = `
+                                <div><b>⚠️ พบช่วงเวลาไม่ว่าง ${conflicted.length} วัน (ระบบจะข้ามให้):</b></div>
+                                <ul class="list-disc list-inside mt-1 mb-2 text-xs space-y-0.5 text-amber-900">${conflictListHtml}</ul>
+                                <div class="text-xs text-green-700 font-semibold"><i class="fas fa-check mr-1"></i> พร้อมทำการจองเฉพาะวันที่ห้องว่างจำนวน <b>${available.length} วัน</b></div>
+                            `;
+                            warning.classList.remove('hidden');
+                            summaryText.innerHTML = `
+                                <div class="text-amber-700 font-bold">จะทำการจอง ${available.length} วัน (ข้ามวันไม่ว่าง ${conflicted.length} วัน)</div>
+                                <div class="text-gray-600 text-xs mt-0.5">เวลา ${startTime} - ${endTime} น.</div>
+                            `;
+                            btn.disabled = false;
+                        } else {
+                            warning.className = "col-span-1 md:col-span-2 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm";
+                            warningText.innerText = `ห้องนี้ไม่ว่างครบทุกวันที่คุณเลือก (${slots.length} วัน) ไม่สามารถทำการจองได้`;
+                            warning.classList.remove('hidden');
+                            btn.disabled = true;
+                        }
+                    } else {
+                        // ไม่ได้เลือกข้ามวันติดชน
+                        warning.className = "col-span-1 md:col-span-2 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm";
+                        warningText.innerHTML = `
+                            <div><b>ห้องนี้ไม่ว่างใน ${conflicted.length} วันต่อไปนี้:</b></div>
+                            <ul class="list-disc list-inside mt-1 mb-1 text-xs space-y-0.5">${conflictListHtml}</ul>
+                            <div class="text-xs text-gray-600 mt-2">💡 ติ๊กที่กล่อง <i>"ข้ามวันที่ห้องไม่ว่างโดยอัตโนมัติ"</i> ด้านบน หากต้องการจองเฉพาะวันที่ว่าง</div>
+                        `;
+                        warning.classList.remove('hidden');
+                        summaryText.innerHTML = `
+                            <div class="text-red-600 font-bold">ติดคิวอื่น ${conflicted.length} วัน (จากทั้งหมด ${slots.length} วัน)</div>
+                            <div class="text-gray-600 text-xs mt-0.5">กรุณาปรับเปลี่ยนช่วงวันหรือเลือกข้ามวันที่ไม่ว่าง</div>
+                        `;
+                        btn.disabled = true;
+                    }
+                }
             }
         }
 
         async function submitBooking(e) {
             e.preventDefault();
-            const data = {
-                roomId: document.getElementById('bookRoomId').value,
-                subject: document.getElementById('bookSubject').value,
-                start: document.getElementById('bookStart').value,
-                end: document.getElementById('bookEnd').value,
-                note: document.getElementById('bookNote').value,
-                username: currentUser.username,
-                name: currentUser.name,
-                department: currentUser.department,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
+            const roomId = document.getElementById('bookRoomId').value;
+            const subject = document.getElementById('bookSubject').value.trim();
+            const note = document.getElementById('bookNote').value.trim();
+            const roomObj = allRooms[roomId];
+            const roomName = roomObj ? roomObj.name : 'ไม่ระบุ';
 
-            await db.collection('bookings').add(data);
-            
-            // --- เพิ่มระบบแจ้งเตือน Telegram (ส่งผ่าน GS Web App) ---
-            const roomObj = allRooms[data.roomId];
-            fetch(GAS_WEB_APP_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "sendTelegram",
-                    bookingData: {
-                        room: roomObj ? roomObj.name : 'ไม่ระบุ',
-                        title: data.subject,
-                        start: data.start,
-                        end: data.end,
-                        name: data.name,
-                        department: data.department,
-                        actionBy: currentUser.name
-                    },
-                    actionText: "จองห้องประชุมใหม่"
-                })
-            }).catch(e => console.error("Telegram notification failed", e));
+            if (bookingMode === 'single') {
+                const start = document.getElementById('bookStart').value;
+                const end = document.getElementById('bookEnd').value;
 
-            Swal.fire('สำเร็จ', 'จองห้องเรียบร้อย', 'success');
-            document.getElementById('bookingForm').reset();
-            switchMenu('my-bookings');
+                const data = {
+                    roomId: roomId,
+                    subject: subject,
+                    start: start,
+                    end: end,
+                    note: note,
+                    username: currentUser.username,
+                    name: currentUser.name,
+                    department: currentUser.department,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                await db.collection('bookings').add(data);
+
+                // ส่ง Telegram
+                fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "sendTelegram",
+                        bookingData: {
+                            room: roomName,
+                            title: data.subject,
+                            start: data.start,
+                            end: data.end,
+                            name: data.name,
+                            department: data.department,
+                            actionBy: currentUser.name,
+                            note: data.note
+                        },
+                        actionText: "จองห้องประชุมใหม่"
+                    })
+                }).catch(err => console.error("Telegram notification failed", err));
+
+                Swal.fire('สำเร็จ', 'จองห้องเรียบร้อย', 'success');
+                resetBookingForm();
+                switchMenu('my-bookings');
+
+            } else {
+                // โหมดหลายวัน (Recurring Mode)
+                const chkSkip = document.getElementById('chkSkipConflict');
+                const isSkipChecked = chkSkip ? chkSkip.checked : false;
+                const slotsToBook = (isSkipChecked && currentConflictedSlots.length > 0) ? currentAvailableSlots : currentCalculatedSlots;
+
+                if (!slotsToBook || slotsToBook.length === 0) {
+                    Swal.fire('ไม่สามารถจองได้', 'ไม่มีวันที่สามารถทำการจองได้ตามเงื่อนไขที่เลือก', 'warning');
+                    return;
+                }
+
+                const startDateStr = document.getElementById('recurStartDate').value;
+                const endDateStr = document.getElementById('recurEndDate').value;
+                const startTime = document.getElementById('recurStartTime').value;
+                const endTime = document.getElementById('recurEndTime').value;
+
+                // แสดงกล่องถามยืนยันก่อนบันทึก
+                const confirmRes = await Swal.fire({
+                    title: 'ยืนยันการจองต่อเนื่อง?',
+                    html: `
+                        <div class="text-left text-sm bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2">
+                            <div><b>ห้อง:</b> ${roomName}</div>
+                            <div><b>หัวข้อ:</b> ${subject}</div>
+                            <div><b>จำนวนวันที่จะจอง:</b> <span class="text-blue-600 font-bold">${slotsToBook.length} วัน</span></div>
+                            <div><b>ช่วงวันที่:</b> ${formatDateShort(startDateStr)} - ${formatDateShort(endDateStr)}</div>
+                            <div><b>เวลา:</b> ${startTime} - ${endTime} น. (ของทุกวัน)</div>
+                            ${note ? `<div><b>หมายเหตุ:</b> ${note}</div>` : ''}
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: `<i class="fas fa-check mr-1"></i> ยืนยันการจอง (${slotsToBook.length} วัน)`,
+                    cancelButtonText: 'ยกเลิก',
+                    confirmButtonColor: '#2563eb'
+                });
+
+                if (!confirmRes.isConfirmed) return;
+
+                Swal.fire({ 
+                    title: 'กำลังบันทึกข้อมูล...', 
+                    html: `กำลังสร้างรายการจองทั้งหมด ${slotsToBook.length} วัน`,
+                    allowOutsideClick: false, 
+                    didOpen: () => Swal.showLoading() 
+                });
+
+                const groupId = 'rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+                const commonData = {
+                    roomId: roomId,
+                    subject: subject,
+                    note: note,
+                    username: currentUser.username,
+                    name: currentUser.name,
+                    department: currentUser.department,
+                    groupId: groupId,
+                    isRecurring: true,
+                    recurTime: `${startTime}-${endTime}`,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                // บันทึกด้วย batch write ทีละชุดสูงสุด 400 documents
+                const chunkSize = 400;
+                for (let i = 0; i < slotsToBook.length; i += chunkSize) {
+                    const chunk = slotsToBook.slice(i, i + chunkSize);
+                    const batch = db.batch();
+                    chunk.forEach(slot => {
+                        const docRef = db.collection('bookings').doc();
+                        batch.set(docRef, {
+                            ...commonData,
+                            start: slot.start,
+                            end: slot.end
+                        });
+                    });
+                    await batch.commit();
+                }
+
+                // ส่ง Telegram แจ้งเตือนรวม 1 ครั้ง
+                const firstSlot = slotsToBook[0];
+                const lastSlot = slotsToBook[slotsToBook.length - 1];
+                const recurSummary = `${formatDateShort(firstSlot.dateStr)} ถึง ${formatDateShort(lastSlot.dateStr)} เวลา ${startTime}-${endTime} น. (รวม ${slotsToBook.length} วัน)`;
+
+                fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "sendTelegram",
+                        bookingData: {
+                            room: roomName,
+                            title: subject,
+                            start: firstSlot.start,
+                            end: lastSlot.end,
+                            name: currentUser.name,
+                            department: currentUser.department,
+                            actionBy: currentUser.name,
+                            note: `[จองต่อเนื่อง ${slotsToBook.length} วัน: เวลา ${startTime}-${endTime} น. ทุกวัน]` + (note ? `\n💬 หมายเหตุ: ${note}` : ''),
+                            isRecurring: true,
+                            recurSummary: recurSummary
+                        },
+                        actionText: `จองห้องประชุมใหม่ (ต่อเนื่อง ${slotsToBook.length} วัน)`
+                    })
+                }).catch(err => console.error("Telegram notification failed", err));
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'จองสำเร็จ!',
+                    text: `บันทึกการจองต่อเนื่องทั้งหมด ${slotsToBook.length} วันเรียบร้อยแล้ว`
+                });
+
+                resetBookingForm();
+                switchMenu('my-bookings');
+            }
         }
 
         function renderMyBookings() {
@@ -494,32 +995,134 @@
                 // ถ้าเป็นแอดมินดูรายการคนอื่น ให้แสดงชื่อเจ้าของคิวด้วย
                 const showOwner = (currentUser.role === 'superadmin' && b.username !== currentUser.username) 
                                 ? ` <span class="text-xs text-blue-500">(${b.name})</span>` : '';
+                const recurBadge = b.isRecurring 
+                                ? `<span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-full inline-flex items-center ml-1 border border-blue-200"><i class="fas fa-sync-alt mr-1"></i>จองต่อเนื่อง</span>` : '';
 
                 html += `<tr>
-                    <td class="p-4 font-bold">${b.subject}${showOwner}</td>
+                    <td class="p-4 font-bold">${b.subject}${showOwner} ${recurBadge}</td>
                     <td class="p-4 text-xs">${formatDT(b.start)}</td>
                     <td class="p-4">${allRooms[b.roomId]?.name || '-'}</td>
-                    <td class="p-4 text-center"><button onclick="delBook('${b.id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded-lg transition"><i class="fas fa-trash"></i></button></td>
+                    <td class="p-4 text-center"><button onclick="delBook('${b.id}')" title="ยกเลิกการจอง" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded-lg transition"><i class="fas fa-trash"></i></button></td>
                 </tr>`;
             });
             document.getElementById('myBookingsTable').innerHTML = html || '<tr><td colspan="4" class="p-10 text-center text-gray-500">ไม่มีรายการ</td></tr>';
         }
 
         async function delBook(id) {
-            const res = await Swal.fire({ title: 'ยืนยันการยกเลิก?', text: 'คุณต้องการยกเลิกการจองนี้ใช่หรือไม่', icon: 'warning', showCancelButton: true });
-            if(res.isConfirmed) {
-                const b = allBookings[id];
-                await db.collection('bookings').doc(id).delete();
-                
-                // --- เพิ่มระบบแจ้งเตือน Telegram เมือยกเลิก (ส่งผ่าน GS Web App) ---
-                if (b) {
-                    const roomObj = allRooms[b.roomId];
+            const b = allBookings[id];
+            if (!b) return;
+
+            const roomObj = allRooms[b.roomId];
+            const roomName = roomObj ? roomObj.name : 'ไม่ระบุ';
+
+            // ตรวจสอบว่าเป็นการจองแบบต่อเนื่องหรือไม่
+            const groupBookings = b.groupId ? Object.keys(allBookings)
+                .map(key => ({ id: key, ...allBookings[key] }))
+                .filter(item => item.groupId === b.groupId)
+                .sort((x, y) => new Date(x.start) - new Date(y.start)) : [];
+
+            if (groupBookings.length > 1) {
+                // เป็นการจองต่อเนื่องหลายวัน
+                const res = await Swal.fire({
+                    title: 'ยกเลิกการจองต่อเนื่อง',
+                    html: `
+                        <div class="text-left text-sm bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2">
+                            <div><b>หัวข้อ:</b> ${b.subject}</div>
+                            <div><b>ห้อง:</b> ${roomName}</div>
+                            <div><b>การจองนี้เป็นส่วนหนึ่งของการจองต่อเนื่อง:</b> ทั้งหมด <span class="text-blue-600 font-bold">${groupBookings.length} วัน</span></div>
+                            <div class="text-xs text-gray-500 pt-2 border-t">คุณต้องการยกเลิกเฉพาะวันนี้ (${formatDT(b.start)}) หรือยกเลิกทั้งหมดในชุดนี้?</div>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showDenyButton: true,
+                    showCancelButton: true,
+                    confirmButtonText: `<i class="fas fa-trash-alt mr-1"></i> ยกเลิกทั้งชุด (${groupBookings.length} วัน)`,
+                    denyButtonText: `<i class="fas fa-calendar-day mr-1"></i> ยกเลิกเฉพาะวันนี้`,
+                    cancelButtonText: 'ปิดหน้าต่าง',
+                    confirmButtonColor: '#ef4444',
+                    denyButtonColor: '#f59e0b'
+                });
+
+                if (res.isConfirmed) {
+                    // ยกเลิกทั้งชุด
+                    Swal.fire({ title: 'กำลังยกเลิกทั้งชุด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    
+                    const chunkSize = 400;
+                    for (let i = 0; i < groupBookings.length; i += chunkSize) {
+                        const chunk = groupBookings.slice(i, i + chunkSize);
+                        const batch = db.batch();
+                        chunk.forEach(item => {
+                            batch.delete(db.collection('bookings').doc(item.id));
+                        });
+                        await batch.commit();
+                    }
+
+                    // ส่ง Telegram แจ้งยกเลิกทั้งชุด
                     fetch(GAS_WEB_APP_URL, {
                         method: "POST",
                         body: JSON.stringify({
                             action: "sendTelegram",
                             bookingData: {
-                                room: roomObj ? roomObj.name : 'ไม่ระบุ',
+                                room: roomName,
+                                title: b.subject,
+                                start: groupBookings[0].start,
+                                end: groupBookings[groupBookings.length - 1].end,
+                                name: b.name,
+                                department: b.department,
+                                actionBy: currentUser.name,
+                                note: `ยกเลิกการจองต่อเนื่องทั้งหมด ${groupBookings.length} วัน`
+                            },
+                            actionText: `ยกเลิกการจองต่อเนื่อง (${groupBookings.length} วัน)`
+                        })
+                    }).catch(e => console.error("Telegram notification failed", e));
+
+                    Swal.fire('สำเร็จ', `ยกเลิกการจองทั้งชุดเรียบร้อย (${groupBookings.length} วัน)`, 'success');
+
+                } else if (res.isDenied) {
+                    // ยกเลิกเฉพาะวันนี้
+                    await db.collection('bookings').doc(id).delete();
+
+                    fetch(GAS_WEB_APP_URL, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            action: "sendTelegram",
+                            bookingData: {
+                                room: roomName,
+                                title: b.subject,
+                                start: b.start,
+                                end: b.end,
+                                name: b.name,
+                                department: b.department,
+                                actionBy: currentUser.name,
+                                note: `ยกเลิกเฉพาะวันที่ ${formatDT(b.start)} (จากชุดจองต่อเนื่อง)`
+                            },
+                            actionText: "ยกเลิกการจอง (1 วัน)"
+                        })
+                    }).catch(e => console.error("Telegram notification failed", e));
+
+                    Swal.fire('สำเร็จ', 'ยกเลิกการจองของวันนี้เรียบร้อย', 'success');
+                }
+            } else {
+                // จองแบบวันเดียวตามปกติ
+                const res = await Swal.fire({ 
+                    title: 'ยืนยันการยกเลิก?', 
+                    text: 'คุณต้องการยกเลิกการจองนี้ใช่หรือไม่', 
+                    icon: 'warning', 
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'ใช่, ยกเลิกการจอง',
+                    cancelButtonText: 'ไม่'
+                });
+
+                if (res.isConfirmed) {
+                    await db.collection('bookings').doc(id).delete();
+
+                    fetch(GAS_WEB_APP_URL, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            action: "sendTelegram",
+                            bookingData: {
+                                room: roomName,
                                 title: b.subject,
                                 start: b.start,
                                 end: b.end,
@@ -530,9 +1133,9 @@
                             actionText: "ยกเลิกการจอง"
                         })
                     }).catch(e => console.error("Telegram notification failed", e));
+
+                    Swal.fire('สำเร็จ', 'ยกเลิกการจองเรียบร้อย', 'success');
                 }
-                
-                Swal.fire('สำเร็จ', 'ยกเลิกการจองเรียบร้อย', 'success');
             }
         }
 
@@ -561,10 +1164,17 @@
                         `;
                     }
 
+                    const recurNotice = b.isRecurring ? `
+                        <div class="flex items-center text-xs text-blue-600 bg-blue-50 p-2.5 rounded-xl border border-blue-100 mb-2">
+                            <i class="fas fa-sync-alt mr-2 text-blue-500"></i> รายการนี้เป็นการจองแบบต่อเนื่องหลายวัน
+                        </div>
+                    ` : '';
+
                     Swal.fire({
                         title: '<span class="text-xl font-bold text-gray-800">รายละเอียดการจอง</span>',
                         html: `
                             <div class="text-left text-sm bg-gray-50/80 p-5 rounded-2xl border border-gray-100 mt-2 space-y-3">
+                                ${recurNotice}
                                 <div class="flex items-start"><i class="fas fa-bookmark w-6 text-blue-500 mt-1"></i> <div><b>หัวข้อ:</b><br>${b.subject}</div></div>
                                 <div class="flex items-start"><i class="fas fa-door-open w-6 text-indigo-500 mt-1"></i> <div><b>ห้อง:</b><br>${allRooms[b.roomId]?.name || '-'}</div></div>
                                 <div class="flex items-start"><i class="fas fa-user-circle w-6 text-gray-500 mt-1"></i> <div><b>ผู้จอง:</b><br>${b.name} (${b.department})</div></div>
@@ -606,10 +1216,15 @@
 
         function renderDashboard() {
             const today = new Date().toISOString().split('T')[0];
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
             const bookings = Object.values(allBookings);
             
             document.getElementById('statTotalRooms').innerText = Object.keys(allRooms).length;
             document.getElementById('statToday').innerText = bookings.filter(b => b.start.includes(today)).length;
+            document.getElementById('statTomorrow').innerText = bookings.filter(b => b.start.includes(tomorrowStr)).length;
             document.getElementById('statMyTotal').innerText = bookings.filter(b => b.username === currentUser.username).length;
 
             let html = '';
